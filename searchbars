@@ -56,8 +56,8 @@
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  // Inicializar el mapa
-  var map = L.map('map').setView([20, 0], 2); // Vista inicial centrada en el mundo
+  // Inicializar el mapa centrado en América
+  var map = L.map('map').setView([15, -90], 3); // Vista inicial centrada en América
 
   // Agregar tiles de OpenStreetMap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -101,16 +101,6 @@
           product: product
         };
         providers.push(provider);
-
-        // Agregar marcador al mapa
-        var marker = L.marker([lat, lng]).addTo(map)
-          .bindPopup('<b>' + providerName + '</b><br>' + description + '<br>' + activity + '<br>' + product);
-
-        // Agregar evento de clic al marcador
-        marker.on('click', function() {
-          map.setView([lat, lng], 10);
-          marker.openPopup();
-        });
       }
     });
   }
@@ -132,20 +122,23 @@
       }
     });
 
-    // Agregar proveedores filtrados al mapa y al sidebar
-    filteredProviders.forEach(provider => {
-      var marker = L.marker([provider.lat, provider.lng]).addTo(map)
-        .bindPopup('<b>' + provider.name + '</b><br>' + provider.description + '<br>' + provider.activity + '<br>' + provider.product);
+    // Mostrar proveedores filtrados solo si hay algo escrito en las barras de búsqueda
+    if (cityQuery || activityQuery) {
+      // Agregar proveedores filtrados al mapa y al sidebar
+      filteredProviders.forEach(provider => {
+        var marker = L.marker([provider.lat, provider.lng]).addTo(map)
+          .bindPopup('<b>' + provider.name + '</b><br>' + provider.description + '<br>' + provider.activity + '<br>' + provider.product);
 
-      var providerItem = document.createElement('div');
-      providerItem.className = 'provider-item';
-      providerItem.textContent = provider.name + ': ' + provider.description + ', ' + provider.activity + ', ' + provider.product;
-      providerItem.addEventListener('click', function() {
-        map.setView([provider.lat, provider.lng], 10);
-        marker.openPopup();
+        var providerItem = document.createElement('div');
+        providerItem.className = 'provider-item';
+        providerItem.textContent = provider.name + ': ' + provider.description + ', ' + provider.activity + ', ' + provider.product;
+        providerItem.addEventListener('click', function() {
+          map.setView([provider.lat, provider.lng], 10);
+          marker.openPopup();
+        });
+        document.getElementById('provider-list').appendChild(providerItem);
       });
-      document.getElementById('provider-list').appendChild(providerItem);
-    });
+    }
   }
 
   // Obtener datos y crear marcadores en el mapa y lista en el sidebar
