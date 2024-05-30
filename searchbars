@@ -186,4 +186,3 @@
           map.setView([provider.lat, provider.lng], 10);
           marker.openPopup();
         });
-        document
