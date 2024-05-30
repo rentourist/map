@@ -17,6 +17,7 @@
     overflow-y: auto;
     padding: 10px;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    background-color: #f5f5f5; /* Color gris claro */
   }
   #map {
     width: 70%;
@@ -28,7 +29,7 @@
     cursor: pointer;
   }
   .provider-item:hover {
-    background-color: #f0f0f0;
+    background-color: #e0e0e0; /* Color de fondo al pasar el ratón */
   }
   #search-bar-container {
     margin-bottom: 10px;
@@ -45,6 +46,13 @@
   .product-item img, .provider-logo {
     max-width: 100px;
     height: auto;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+  .provider-title {
+    font-family: 'Georgia', serif; /* Fuente diferente para el título */
+    font-size: 1.2em;
+    font-weight: bold;
   }
 </style>
 </head>
@@ -174,7 +182,8 @@
         }
 
         var providerNameElem = document.createElement('div');
-        providerNameElem.innerHTML = '<b>' + providerName + '</b><br>' + provider.description;
+        providerNameElem.className = 'provider-title';
+        providerNameElem.innerHTML = providerName + '<br>' + provider.description;
         providerItem.appendChild(providerNameElem);
 
         provider.products.forEach(product => {
