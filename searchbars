@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tourism Providers Map</title>
+<title>Mapa de Proveedores de Turismo</title>
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
@@ -42,13 +42,13 @@
 </head>
 <body>
 <div id="sidebar">
-  <h2>Tourism Providers</h2>
+  <h2>Proveedores de Turismo</h2>
   <div id="search-bar-container">
-    <input type="text" id="search-city" class="search-bar" placeholder="Search by city" />
-    <input type="text" id="search-activity" class="search-bar" placeholder="Search by product/activity" />
+    <input type="text" id="search-city" class="search-bar" placeholder="Buscar por ciudad" />
+    <input type="text" id="search-activity" class="search-bar" placeholder="Buscar por producto/actividad" />
   </div>
   <div id="provider-list">
-    <!-- List of providers will be dynamically generated here -->
+    <!-- La lista de proveedores se generará dinámicamente aquí -->
   </div>
 </div>
 <div id="map"></div>
@@ -56,21 +56,21 @@
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  // Initialize the map
-  var map = L.map('map').setView([20, 0], 2); // Set initial view to center of the world
+  // Inicializar el mapa
+  var map = L.map('map').setView([20, 0], 2); // Vista inicial centrada en el mundo
 
-  // Add OpenStreetMap tiles
+  // Agregar tiles de OpenStreetMap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // URL of the published Google Sheet in CSV format
+  // URL de la hoja de Google publicada en formato CSV
   var sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS0FQT0wlhjdEp306XgRO5LAW7XexeTYP_Vh8X3uJuusZ2-SR1ZB7Jd0MZCZBaHOGN07cV6ev7aU4kK/pub?output=csv';
 
-  // Array to hold all provider data
+  // Array para almacenar todos los datos de proveedores
   var providers = [];
 
-  // Function to fetch and parse CSV data
+  // Función para obtener y analizar datos CSV
   function fetchCSV(url) {
     fetch(url)
       .then(response => response.text())
@@ -79,7 +79,7 @@
       });
   }
 
-  // Function to parse CSV and add markers to the map and list to the sidebar
+  // Función para analizar CSV y agregar marcadores al mapa y lista al sidebar
   function parseCSV(csvText) {
     var rows = csvText.split('\n').slice(1);
     rows.forEach(row => {
@@ -102,24 +102,20 @@
         };
         providers.push(provider);
 
-        // Add marker to the map
+        // Agregar marcador al mapa
         var marker = L.marker([lat, lng]).addTo(map)
           .bindPopup('<b>' + providerName + '</b><br>' + description + '<br>' + activity + '<br>' + product);
 
-        // Add provider to the sidebar list
-        var providerItem = document.createElement('div');
-        providerItem.className = 'provider-item';
-        providerItem.textContent = providerName + ': ' + description + ', ' + activity + ', ' + product;
-        providerItem.addEventListener('click', function() {
+        // Agregar evento de clic al marcador
+        marker.on('click', function() {
           map.setView([lat, lng], 10);
           marker.openPopup();
         });
-        document.getElementById('provider-list').appendChild(providerItem);
       }
     });
   }
 
-  // Function to filter providers based on search input
+  // Función para filtrar proveedores basado en la entrada de búsqueda
   function filterProviders() {
     var cityQuery = document.getElementById('search-city').value.toLowerCase();
     var activityQuery = document.getElementById('search-activity').value.toLowerCase();
@@ -128,7 +124,7 @@
       (provider.activity.toLowerCase().includes(activityQuery) || provider.product.toLowerCase().includes(activityQuery))
     );
 
-    // Clear the current list and markers
+    // Limpiar la lista actual y marcadores
     document.getElementById('provider-list').innerHTML = '';
     map.eachLayer(function(layer) {
       if (layer instanceof L.Marker) {
@@ -136,7 +132,7 @@
       }
     });
 
-    // Add filtered providers to the map and sidebar
+    // Agregar proveedores filtrados al mapa y al sidebar
     filteredProviders.forEach(provider => {
       var marker = L.marker([provider.lat, provider.lng]).addTo(map)
         .bindPopup('<b>' + provider.name + '</b><br>' + provider.description + '<br>' + provider.activity + '<br>' + provider.product);
@@ -152,10 +148,10 @@
     });
   }
 
-  // Fetch data and create map markers and sidebar list
+  // Obtener datos y crear marcadores en el mapa y lista en el sidebar
   fetchCSV(sheetURL);
 
-  // Add event listeners to the search bars
+  // Agregar event listeners a las barras de búsqueda
   document.getElementById('search-city').addEventListener('input', filterProviders);
   document.getElementById('search-activity').addEventListener('input', filterProviders);
 </script>
