@@ -39,9 +39,14 @@
     padding: 5px;
     margin-bottom: 5px;
   }
-  .provider-logo {
+  .product-item {
+    margin-left: 10px;
+    padding: 5px;
+  }
+  .product-item img, .provider-logo {
     max-width: 100px;
     height: auto;
+    margin-top: 5px;
     margin-bottom: 5px;
   }
   .provider-title {
@@ -102,6 +107,7 @@
       var activity = cols[4];
       var product = cols[5];
       var logoURL = cols[6];
+      var productImageURL = cols[7];
 
       if (!isNaN(lat) && !isNaN(lng)) {
         var provider = {
@@ -111,7 +117,8 @@
           description: description,
           activity: activity,
           product: product,
-          logoURL: logoURL
+          logoURL: logoURL,
+          productImageURL: productImageURL
         };
         providers.push(provider);
       }
@@ -145,10 +152,14 @@
             lng: provider.lng,
             description: provider.description,
             logoURL: provider.logoURL,
-            activities: []
+            products: []
           };
         }
-        acc[provider.name].activities.push(provider.activity + ': ' + provider.product);
+        acc[provider.name].products.push({
+          activity: provider.activity,
+          product: provider.product,
+          productImageURL: provider.productImageURL
+        });
         return acc;
       }, {});
 
@@ -172,17 +183,40 @@
 
         var providerNameElem = document.createElement('div');
         providerNameElem.className = 'provider-title';
-        providerNameElem.textContent = providerName;
+        providerNameElem.innerHTML = providerName + '<br>' + provider.description;
         providerItem.appendChild(providerNameElem);
 
-        // Agregar actividades
-        provider.activities.forEach(activity => {
-          var activityElem = document.createElement('div');
-          activityElem.textContent = activity;
-          providerItem.appendChild(activityElem);
+        provider.products.forEach(product => {
+          var productItem = document.createElement('div');
+          productItem.className = 'product-item';
+          productItem.innerHTML = '<b>Actividad:</b> ' + product.activity + '<br><b>Producto:</b> ' + product.product;
+
+          // Agregar imagen del producto
+          if (product.productImageURL) {
+            var productImg = document.createElement('img');
+            productImg.src = product.productImageURL;
+            productImg.alt = product.product;
+            productItem.appendChild(productImg);
+          }
+
+          providerItem.appendChild(productItem);
         });
 
         providerItem.addEventListener('click', function() {
           map.setView([provider.lat, provider.lng], 10);
           marker.openPopup();
         });
+        document.getElementById('provider-list').appendChild(providerItem);
+      });
+    }
+  }
+
+  // Obtener datos y crear marcadores en el mapa y lista en el sidebar
+  fetchCSV(sheetURL);
+
+  // Agregar event listeners a las barras de búsqueda
+  document.getElementById('search-city').addEventListener('input', filterProviders);
+  document.getElementById('search-activity').addEventListener('input', filterProviders);
+</script>
+</body>
+</html>
