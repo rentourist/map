@@ -38,6 +38,14 @@
     padding: 5px;
     margin-bottom: 5px;
   }
+  .product-item {
+    margin-left: 10px;
+    padding: 5px;
+  }
+  .product-item img, .provider-logo {
+    max-width: 100px;
+    height: auto;
+  }
 </style>
 </head>
 <body>
@@ -90,6 +98,8 @@
       var description = cols[3];
       var activity = cols[4];
       var product = cols[5];
+      var logoURL = cols[6];
+      var productImageURL = cols[7];
 
       if (!isNaN(lat) && !isNaN(lng)) {
         var provider = {
@@ -98,7 +108,9 @@
           lng: lng,
           description: description,
           activity: activity,
-          product: product
+          product: product,
+          logoURL: logoURL,
+          productImageURL: productImageURL
         };
         providers.push(provider);
       }
@@ -124,14 +136,63 @@
 
     // Mostrar proveedores filtrados solo si hay algo escrito en las barras de búsqueda
     if (cityQuery || activityQuery) {
-      // Agregar proveedores filtrados al mapa y al sidebar
-      filteredProviders.forEach(provider => {
+      // Agrupar proveedores por nombre
+      var groupedProviders = filteredProviders.reduce((acc, provider) => {
+        if (!acc[provider.name]) {
+          acc[provider.name] = {
+            lat: provider.lat,
+            lng: provider.lng,
+            description: provider.description,
+            logoURL: provider.logoURL,
+            products: []
+          };
+        }
+        acc[provider.name].products.push({
+          activity: provider.activity,
+          product: provider.product,
+          productImageURL: provider.productImageURL
+        });
+        return acc;
+      }, {});
+
+      // Agregar proveedores agrupados al mapa y al sidebar
+      Object.keys(groupedProviders).forEach(providerName => {
+        var provider = groupedProviders[providerName];
         var marker = L.marker([provider.lat, provider.lng]).addTo(map)
-          .bindPopup('<b>' + provider.name + '</b><br>' + provider.description + '<br>' + provider.activity + '<br>' + provider.product);
+          .bindPopup('<b>' + providerName + '</b><br>' + provider.description);
 
         var providerItem = document.createElement('div');
         providerItem.className = 'provider-item';
-        providerItem.textContent = provider.name + ': ' + provider.description + ', ' + provider.activity + ', ' + provider.product;
+
+        // Agregar logo del proveedor
+        if (provider.logoURL) {
+          var logoImg = document.createElement('img');
+          logoImg.src = provider.logoURL;
+          logoImg.alt = providerName + ' Logo';
+          logoImg.className = 'provider-logo';
+          providerItem.appendChild(logoImg);
+        }
+
+        var providerNameElem = document.createElement('div');
+        providerNameElem.innerHTML = '<b>' + providerName + '</b><br>' + provider.description;
+        providerItem.appendChild(providerNameElem);
+
+        provider.products.forEach(product => {
+          var productItem = document.createElement('div');
+          productItem.className = 'product-item';
+          productItem.innerHTML = '<b>Actividad:</b> ' + product.activity + '<br><b>Producto:</b> ' + product.product;
+
+          // Agregar imagen del producto
+          if (product.productImageURL) {
+            var productImg = document.createElement('img');
+            productImg.src = product.productImageURL;
+            productImg.alt = product.product;
+            productItem.appendChild(productImg);
+          }
+
+          providerItem.appendChild(productItem);
+        });
+
         providerItem.addEventListener('click', function() {
           map.setView([provider.lat, provider.lng], 10);
           marker.openPopup();
