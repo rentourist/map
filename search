@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tourism Providers Map</title>
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+  body {
+    display: flex;
+    font-family: Arial, sans-serif;
+  }
+  #sidebar {
+    width: 30%;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 10px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  }
+  #map {
+    width: 70%;
+    height: 100vh;
+  }
+  .provider-item {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    cursor: pointer;
+  }
+  .provider-item:hover {
+    background-color: #f0f0f0;
+  }
+  #search-bar {
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <h2>Tourism Providers</h2>
+  <input type="text" id="search-bar" placeholder="Search by product or city" />
+  <div id="provider-list">
+    <!-- List of providers will be dynamically generated here -->
+  </div>
+</div>
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  // Initialize the map
+  var map = L.map('map').setView([20, 0], 2); // Set initial view to center of the world
+
+  // Add OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // URL of the published Google Sheet in CSV format
+  var sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS0FQT0wlhjdEp306XgRO5LAW7XexeTYP_Vh8X3uJuusZ2-SR1ZB7Jd0MZCZBaHOGN07cV6ev7aU4kK/pub?output=csv';
+
+  // Array to hold all provider data
+  var providers = [];
+
+  // Function to fetch and parse CSV data
+  function fetchCSV(url) {
+    fetch(url)
+      .then(response => response.text())
+      .then(csvText => {
+        parseCSV(csvText);
+      });
+  }
+
+  // Function to parse CSV and add markers to the map and list to the sidebar
+  function parseCSV(csvText) {
+    var rows = csvText.split('\n').slice(1);
+    rows.forEach(row => {
+      var cols = row.split(',');
+      var providerName = cols[0];
+      var lat = parseFloat(cols[1]);
+      var lng = parseFloat(cols[2]);
+      var description = cols[3];
+
+      if (!isNaN(lat) && !isNaN(lng)) {
+        var provider = {
+          name: providerName,
+          lat: lat,
+          lng: lng,
+          description: description
+        };
+        providers.push(provider);
+
+        // Add marker to the map
+        var marker = L.marker([lat, lng]).addTo(map)
+          .bindPopup('<b>' + providerName + '</b><br>' + description);
+
+        // Add provider to the sidebar list
+        var providerItem = document.createElement('div');
+        providerItem.className = 'provider-item';
+        providerItem.textContent = providerName + ': ' + description;
+        providerItem.addEventListener('click', function() {
+          map.setView([lat, lng], 10);
+          marker.openPopup();
+        });
+        document.getElementById('provider-list').appendChild(providerItem);
+      }
+    });
+  }
+
+  // Function to filter providers based on search input
+  function filterProviders() {
+    var query = document.getElementById('search-bar').value.toLowerCase();
+    var filteredProviders = providers.filter(provider =>
+      provider.name.toLowerCase().includes(query) ||
+      provider.description.toLowerCase().includes(query)
+    );
+
+    // Clear the current list and markers
+    document.getElementById('provider-list').innerHTML = '';
+    map.eachLayer(function(layer) {
+      if (layer instanceof L.Marker) {
+        map.removeLayer(layer);
+      }
+    });
+
+    // Add filtered providers to the map and sidebar
+    filteredProviders.forEach(provider => {
+      var marker = L.marker([provider.lat, provider.lng]).addTo(map)
+        .bindPopup('<b>' + provider.name + '</b><br>' + provider.description);
+
+      var providerItem = document.createElement('div');
+      providerItem.className = 'provider-item';
+      providerItem.textContent = provider.name + ': ' + provider.description;
+      providerItem.addEventListener('click', function() {
+        map.setView([provider.lat, provider.lng], 10);
+        marker.openPopup();
+      });
+      document.getElementById('provider-list').appendChild(providerItem);
+    });
+  }
+
+  // Fetch data and create map markers and sidebar list
+  fetchCSV(sheetURL);
+
+  // Add event listener to the search bar
+  document.getElementById('search-bar').addEventListener('input', filterProviders);
+</script>
+</body>
+</html>
