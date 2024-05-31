@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marketplace de Proveedores</title>
+<title>Mapa de Proveedores</title>
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
   body {
     display: flex;
     font-family: Arial, sans-serif;
+    margin: 0;
   }
   #sidebar {
     width: 30%;
@@ -17,7 +18,7 @@
     overflow-y: auto;
     padding: 10px;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    background-color: #f5f5f5;
+    background-color: #f8f8f8;
   }
   #map {
     width: 70%;
@@ -29,37 +30,38 @@
     cursor: pointer;
   }
   .provider-item:hover {
-    background-color: #e0e0e0;
+    background-color: #f0f0f0;
   }
-  .provider-name {
+  .provider-title {
     font-weight: bold;
     font-family: 'Courier New', Courier, monospace;
+    font-size: 18px;
   }
-  .whatsapp-button {
-    margin-top: 10px;
-    padding: 10px 15px;
-    background-color: #25d366;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: center;
-    display: inline-block;
+  .provider-products {
+    margin-left: 20px;
   }
-  .whatsapp-button:hover {
-    background-color: #1ebc55;
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    body {
+      flex-direction: column;
+    }
+    #sidebar {
+      width: 100%;
+      height: 50vh;
+    }
+    #map {
+      width: 100%;
+      height: 50vh;
+    }
   }
 </style>
 </head>
 <body>
 <div id="sidebar">
   <h2>Proveedores de Turismo</h2>
-  <div id="search-bar-container">
-    <input type="text" id="search-city" class="search-bar" placeholder="Buscar por ciudad" />
-    <input type="text" id="search-activity" class="search-bar" placeholder="Buscar por producto/actividad" />
-  </div>
   <div id="provider-list">
-    <!-- List of providers will be dynamically generated here -->
+    <!-- Listado de proveedores generado dinámicamente aquí -->
   </div>
 </div>
 <div id="map"></div>
@@ -67,21 +69,21 @@
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-  // Initialize the map
-  var map = L.map('map').setView([-38.4161, -63.6167], 4); // Centered on Argentina
+  // Inicializar el mapa
+  var map = L.map('map').setView([-38.4161, -63.6167], 4); // Vista inicial centrada en Argentina
 
-  // Add OpenStreetMap tiles
+  // Añadir tiles de OpenStreetMap
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // URL of the published Google Sheet in CSV format
+  // URL del Google Sheet publicado en formato CSV
   var sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS0FQT0wlhjdEp306XgRO5LAW7XexeTYP_Vh8X3uJuusZ2-SR1ZB7Jd0MZCZBaHOGN07cV6ev7aU4kK/pub?output=csv';
 
-  // Array to hold all provider data
+  // Array para almacenar todos los datos de proveedores
   var providers = [];
 
-  // Function to fetch and parse CSV data
+  // Función para obtener y analizar datos CSV
   function fetchCSV(url) {
     fetch(url)
       .then(response => response.text())
@@ -90,10 +92,9 @@
       });
   }
 
-  // Function to parse CSV and add markers to the map and list to the sidebar
+  // Función para analizar el CSV y agregar marcadores al mapa y listado al sidebar
   function parseCSV(csvText) {
     var rows = csvText.split('\n').slice(1);
-    var providerData = {};
     rows.forEach(row => {
       var cols = row.split(',');
       var providerName = cols[0];
@@ -104,103 +105,59 @@
       var product = cols[5];
 
       if (!isNaN(lat) && !isNaN(lng)) {
-        if (!providerData[providerName]) {
-          providerData[providerName] = {
-            name: providerName,
-            lat: lat,
-            lng: lng,
-            description: description,
-            activity: activity,
-            products: []
-          };
-        }
-        providerData[providerName].products.push(product);
+        var provider = {
+          name: providerName,
+          lat: lat,
+          lng: lng,
+          description: description,
+          activity: activity,
+          product: product
+        };
+        providers.push(provider);
       }
     });
 
-    // Convert providerData to an array and add to providers array
-    for (var key in providerData) {
-      providers.push(providerData[key]);
-    }
+    displayProviders();
+  }
 
-    // Add markers to the map and providers to the sidebar
+  // Función para mostrar proveedores en el mapa y el sidebar
+  function displayProviders() {
+    var providerMap = {};
+
     providers.forEach(provider => {
-      // Add marker to the map
-      var marker = L.marker([provider.lat, provider.lng]).addTo(map)
-        .bindPopup('<b>' + provider.name + '</b><br>' + provider.description + '<br>' + provider.activity + '<br>' + provider.products.join(', '));
-
-      // Add provider to the sidebar list
-      var providerItem = document.createElement('div');
-      providerItem.className = 'provider-item';
-      providerItem.innerHTML = '<div class="provider-name">' + provider.name + '</div>' +
-                               '<div>' + provider.description + '</div>' +
-                               '<div>' + provider.activity + '</div>' +
-                               '<div>Productos: ' + provider.products.join(', ') + '</div>' +
-                               '<button class="whatsapp-button">Enviar Whatsapp</button>';
-      providerItem.querySelector('.whatsapp-button').addEventListener('click', function() {
-        sendWhatsApp(provider.products.join(', '), provider.name);
-      });
-      providerItem.addEventListener('click', function() {
-        map.setView([provider.lat, provider.lng], 10);
-        marker.openPopup();
-      });
-      document.getElementById('provider-list').appendChild(providerItem);
-    });
-  }
-
-  // Function to send WhatsApp message
-  function sendWhatsApp(products, provider) {
-    var message = 'Hola, quiero alquilar ' + products + ' de ' + provider;
-    var whatsappURL = 'https://wa.me/543812187196?text=' + encodeURIComponent(message);
-    window.open(whatsappURL, '_blank');
-  }
-
-  // Function to filter providers based on search input
-  function filterProviders() {
-    var cityQuery = document.getElementById('search-city').value.toLowerCase();
-    var activityQuery = document.getElementById('search-activity').value.toLowerCase();
-    var filteredProviders = providers.filter(provider =>
-      provider.description.toLowerCase().includes(cityQuery) &&
-      (provider.activity.toLowerCase().includes(activityQuery) || provider.products.some(product => product.toLowerCase().includes(activityQuery)))
-    );
-
-    // Clear the current list and markers
-    document.getElementById('provider-list').innerHTML = '';
-    map.eachLayer(function(layer) {
-      if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
+      if (!providerMap[provider.name]) {
+        providerMap[provider.name] = {
+          description: provider.description,
+          activity: provider.activity,
+          products: [],
+          lat: provider.lat,
+          lng: provider.lng
+        };
       }
+      providerMap[provider.name].products.push(provider.product);
     });
 
-    // Add filtered providers to the map and sidebar
-    filteredProviders.forEach(provider => {
+    for (var providerName in providerMap) {
+      var provider = providerMap[providerName];
       var marker = L.marker([provider.lat, provider.lng]).addTo(map)
-        .bindPopup('<b>' + provider.name + '</b><br>' + provider.description + '<br>' + provider.activity + '<br>' + provider.products.join(', '));
+        .bindPopup('<b>' + providerName + '</b><br>' + provider.description + '<br>' + provider.activity + '<br>' + provider.products.join(', '));
 
       var providerItem = document.createElement('div');
       providerItem.className = 'provider-item';
-      providerItem.innerHTML = '<div class="provider-name">' + provider.name + '</div>' +
-                               '<div>' + provider.description + '</div>' +
-                               '<div>' + provider.activity + '</div>' +
-                               '<div>Productos: ' + provider.products.join(', ') + '</div>' +
-                               '<button class="whatsapp-button">Enviar Whatsapp</button>';
-      providerItem.querySelector('.whatsapp-button').addEventListener('click', function() {
-        sendWhatsApp(provider.products.join(', '), provider.name);
-      });
-      providerItem.addEventListener('click', function() {
-        map.setView([provider.lat, provider.lng], 10);
-        marker.openPopup();
-      });
+      providerItem.innerHTML = '<div class="provider-title">' + providerName + '</div>' +
+                               '<div class="provider-products">Ciudad: ' + provider.description + '<br>Actividad: ' + provider.activity + '<br>Productos: ' + provider.products.join(', ') + '</div>';
+      providerItem.addEventListener('click', (function(marker, providerName) {
+        return function() {
+          map.setView(marker.getLatLng(), 10);
+          marker.openPopup();
+        };
+      })(marker, providerName));
       document.getElementById('provider-list').appendChild(providerItem);
-    });
+    }
   }
 
-  // Fetch data and create map markers and sidebar list
+  // Obtener datos y crear marcadores y listado
   fetchCSV(sheetURL);
-
-  // Add event listeners to the search bars
-  document.getElementById('search-city').addEventListener('input', filterProviders);
-  document.getElementById('search-activity').addEventListener('input', filterProviders);
 </script>
 </body>
 </html>
