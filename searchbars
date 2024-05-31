@@ -136,7 +136,10 @@
                                '<div>' + provider.description + '</div>' +
                                '<div>' + provider.activity + '</div>' +
                                '<div>Productos: ' + provider.products.join(', ') + '</div>' +
-                               '<button class="whatsapp-button" onclick="sendWhatsApp(\'' + provider.products.join(', ') + '\', \'' + provider.name + '\')">Enviar Whatsapp</button>';
+                               '<button class="whatsapp-button">Enviar Whatsapp</button>';
+      providerItem.querySelector('.whatsapp-button').addEventListener('click', function() {
+        sendWhatsApp(provider.products.join(', '), provider.name);
+      });
       providerItem.addEventListener('click', function() {
         map.setView([provider.lat, provider.lng], 10);
         marker.openPopup();
@@ -180,7 +183,10 @@
                                '<div>' + provider.description + '</div>' +
                                '<div>' + provider.activity + '</div>' +
                                '<div>Productos: ' + provider.products.join(', ') + '</div>' +
-                               '<button class="whatsapp-button" onclick="sendWhatsApp(\'' + provider.products.join(', ') + '\', \'' + provider.name + '\')">Enviar Whatsapp</button>';
+                               '<button class="whatsapp-button">Enviar Whatsapp</button>';
+      providerItem.querySelector('.whatsapp-button').addEventListener('click', function() {
+        sendWhatsApp(provider.products.join(', '), provider.name);
+      });
       providerItem.addEventListener('click', function() {
         map.setView([provider.lat, provider.lng], 10);
         marker.openPopup();
